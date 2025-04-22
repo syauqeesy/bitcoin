@@ -4,13 +4,14 @@
 #include <openssl/sha.h>
 #include <openssl/ripemd.h>
 #include <secp256k1.h>
+#include "segwit_addr.h"
 
 int main() {
   unsigned char private_key[32];
   unsigned char pubkey_serialized[33];
   unsigned char sha256_result[32];
   unsigned char ripemd160_result[20];
-  unsigned char address[22];
+  unsigned char address[100];
 
   secp256k1_pubkey pubkey;
   secp256k1_context *ctx;
@@ -43,7 +44,11 @@ int main() {
 
   memcpy(witprog + 1, ripemd160_result, 20);
 
-  // bech32_encode(address, witprog, sizeof(witprog));
+  if (segwit_addr_encode(address, "tb" /* "bc" */, 3, witprog, sizeof(witprog)) != 1) {
+    fprintf(stderr, "error encoding to bech32 wallet\n");
+    secp256k1_context_destroy(ctx);
+    return 1;
+  }
 
   printf("private key (hex): ");
   for (int i = 0; i < 32; i++) {
